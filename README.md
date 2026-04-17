@@ -1,144 +1,197 @@
-# Machine-vision-project
-Vision-based traffic analysis system with YOLOv8 vehicle detection, persistent tracking, homography-based speed estimation, vehicle counting, congestion analysis, and live violation alerts through a Flask web dashboard.
+# Vision-Based Speed Estimation & Traffic Analysis
 
-#**Project Files**
-app.py Main Flask server. It:
+A working machine vision mini-project with a web interface for traffic video analysis. It can analyze an uploaded video file or connect to a live camera/stream URL.
 
-opens the website
+The project estimates vehicle speed with optical flow and flags:
 
-accepts uploaded videos or live camera sources
+- Overspeeding
+- Wrong-way driving
+- Possible illegal U-turns
+- ML-classified illegal-driving decisions from track features
 
-starts/stops analysis sessions
+## How It Works
 
-serves the live annotated video feed
+The app uses OpenCV background subtraction to find moving vehicle-sized regions. Each moving region is tracked across frames with centroid association. Inside every tracked vehicle box, Lucas-Kanade optical flow estimates pixel motion between frames. Pixel speed is converted to km/h using the `pixels per meter` calibration value from the UI.
 
-returns live metrics to the frontend
-traffic_analyzer.py Core machine vision logic. It:
+Event detection is rule-based:
 
-reads video frames
+- Overspeeding: estimated speed is above the configured speed limit.
+- Wrong-way driving: the tracked direction opposes the expected road direction.
+- Illegal U-turn: the current direction turns sharply away from the initial direction.
 
-detects vehicles
+The project also includes a trained Random Forest classifier. It learns from vehicle-track features such as speed, direction, path length, straightness, turn angle, and wrong-way score. If `models/violation_model.joblib` exists, the app uses it for wrong-way and U-turn decisions. Overspeeding still uses the configured speed limit as a hard rule because that violation is deterministic after speed estimation.
 
-tracks them across frames
+This design does not require YOLO weights or an internet download, which makes it easier to run for lab demonstrations.
 
-estimates speed using optical flow / motion tracking
+## Setup
 
-checks for overspeeding, wrong-way driving, and illegal U-turns
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+python app.py
+```
 
-computes confidence values
+Open the app at:
 
-draws boxes, labels, and the overlay on the video
-violation_model.py Loads the trained ML model and prepares feature values. It:
+```text
+http://127.0.0.1:5000
+```
 
-defines the training/prediction feature set
+## Train The Illegal-Driving Model
 
-converts track history into model input features
+A starter labelled dataset is included at:
 
-loads violation_model.joblib
+```text
+data/violation_training_data.csv
+```
 
-returns violation probabilities
-train_violation_model.py Training script for the illegal-driving classifier. It:
+Train or retrain the model with:
 
-reads the training CSV
+```powershell
+python train_violation_model.py --dataset data/violation_training_data.csv --output models/violation_model.joblib
+```
 
-trains the Random Forest model
+The CSV must include these feature columns:
 
-evaluates it
+```text
+speed_kmh,speed_over_limit,direction_dx,direction_dy,path_length,displacement,straightness,turn_angle,wrong_way_score,seen_count
+```
 
-saves the trained model into models/
-vehicle_detector.py Optional detector loader. If you train your own detector and save it as models/vehicle_detector.pt, this file loads it and uses it for vehicle detection.
-train_vehicle_detector.py Trains a custom vehicle detector from scratch using a YOLO-style architecture and a converted dataset like BDD100K.
-templates/index.html The actual webpage structure. Defines:
+And these label columns:
 
-header
+```text
+overspeeding,wrong_way,illegal_uturn
+```
 
-form controls
+Use `0` for normal behavior and `1` for violation behavior. To improve accuracy for your own demo location, add rows from your own videos. More real examples of legal movement, wrong-way movement, and U-turn movement will make the classifier more reliable.
 
-video display area
+## Use A Larger Trajectory Dataset For Illegal Driving
 
-metric cards
+For illegal-driving decisions, use trajectory datasets instead of image detection datasets. Good open choices are:
 
-alerts section
-static/styles.css All styling for the web interface.
-static/app.js Frontend behavior. It:
+- inD: intersection road-user trajectories
+- rounD: roundabout trajectories
+- highD: highway vehicle trajectories
 
-switches between upload/live mode
+These datasets provide per-vehicle motion tracks, which match this project's violation classifier better than image-only datasets.
 
-sends form data to Flask
+After downloading one of those datasets, point the converter at the folder that contains files ending in `_tracks.csv`:
 
-starts/stops analysis
+```powershell
+python tools/trajectory_to_violation_dataset.py --root "D:\datasets\ind" --output data\violation_training_data_big.csv --speed-limit 50 --expected-direction right
+```
 
-updates dashboard metrics live
+Then train the illegal-driving classifier on the larger dataset:
 
-updates alerts live
-data/Indian_Traffic_Violations.csv External traffic violation records dataset used for recalibrating the model, especially overspeeding behavior.
-data/violation_training_seed.csv Small seed dataset containing motion-based examples for overspeeding, wrong-way, and illegal U-turn behavior.
-data/violation_training_data.csv Final merged training dataset used by the model.
-models/violation_model.joblib The trained illegal-driving classifier used by the app.
-models/vehicle_detector.pt Optional custom trained detector model if you train one.
-tools/prepare_indian_violation_training.py Converts the Indian violations dataset into training rows and merges it with the seed dataset.
-tools/trajectory_to_violation_dataset.py Converts trajectory datasets like inD/highD/rounD into training rows for the violation model.
-tools/bdd100k_to_yolo.py Converts BDD100K labels into YOLO format for detector training.
-README.md Setup, usage, training instructions, and project explanation.
-Web Dashboard Elements
-Top Header Shows the project title and short project identity text. Purely presentational.
-Traffic Source Lets the user choose:
+```powershell
+python train_violation_model.py --dataset data\violation_training_data_big.csv --output models\violation_model.joblib
+```
 
-Upload video file
+The converter creates labels from motion patterns:
 
-Connect live traffic camera
-Video File Used when upload mode is selected. You choose a saved video from your computer.
-Camera URL or webcam index Used when live mode is selected. Can accept:
+- overspeeding: average speed is above the configured speed limit
+- wrong-way: net motion is opposite the expected traffic direction
+- illegal U-turn: trajectory changes direction sharply and is not straight
 
-direct stream URL
+For the most accurate final model, manually review and correct the generated labels for a few hundred tracks from your target camera angle.
 
-webcam index like 0
-Pixels per meter Calibration value. Used to convert motion in pixels into estimated real-world speed.
-Speed limit (km/h) Threshold for overspeeding detection.
-Expected traffic direction Defines legal motion direction:
+## Train Your Own Vehicle Detector With BDD100K
 
-left to right
+For a stronger project without using pretrained weights, use the BDD100K detection dataset. It is a large driving dataset with road-scene images and labels for vehicles, traffic lights, and traffic signs.
 
-right to left
+Download BDD100K from:
 
-top to bottom
+```text
+https://bdd-data.berkeley.edu/
+```
 
-bottom to top
-This is used for wrong-way detection.
-U-turn angle threshold Controls how sharp a direction change must be before it is considered a possible illegal U-turn.
-Start analysis Starts the video processing.
-Stop Stops the current analysis session.
-Video Display Area Shows the processed video feed with:
+Expected folder layout after download:
 
-vehicle boxes
+```text
+BDD100K_ROOT/
+  images/
+    100k/
+      train/
+      val/
+  labels/
+    det_20/
+      det_train.json
+      det_val.json
+```
 
-track trails
+Convert BDD100K detection labels to YOLO format:
 
-speed text
+```powershell
+python tools/bdd100k_to_yolo.py --bdd-root "D:\datasets\bdd100k" --output data/bdd100k_yolo
+```
 
-status label
+Train a detector from scratch:
 
-confidence label
-Vehicle Box Overlay For each vehicle it shows:
+```powershell
+python train_vehicle_detector.py --data data/bdd100k_yolo/bdd100k.yaml --epochs 50 --imgsz 640 --batch 8
+```
 
-vehicle ID
+The script saves the best trained detector here:
 
-estimated speed
+```text
+models/vehicle_detector.pt
+```
 
-status like NORMAL, OVERSPEED, or VIOLATION
+When that file exists, the web app automatically uses your trained detector instead of the basic background-subtraction detector.
 
-confidence percentage
-Vehicles Number of currently confirmed tracked vehicles.
-Average speed Average speed of the currently confirmed vehicles.
-Overspeeding Number of vehicles currently flagged as overspeeding.
-Wrong-way Number of vehicles currently flagged as moving in the wrong direction.
-U-turns Number of vehicles currently flagged for possible illegal U-turns.
-Overall confidence Average confidence across all currently confirmed tracked vehicles.
-Alert confidence Average confidence only across vehicles that are currently flagged for a violation.
-Alerts Live list of detected violations. Examples:
+## Using The Web Interface
 
-Vehicle 5: overspeeding (72.4 km/h, 91% confidence)
-•
-Vehicle 3: wrong-way driving (67% confidence)
-•
-Vehicle 9: possible illegal U-turn (64% confidence)
+1. Choose `Upload video file` or `Connect live traffic camera`.
+2. For upload mode, select a traffic video.
+3. For live mode, enter an RTSP/HTTP stream URL, a local video path, or `0` for a webcam.
+4. Set `Pixels per meter`.
+5. Set the speed limit and expected traffic direction.
+6. Click `Start analysis`.
+
+## Calibration Tips
+
+Speed accuracy depends on `pixels per meter`. For a real road video, measure a known road marking or lane width in pixels:
+
+```text
+pixels_per_meter = measured_pixels / real_world_meters
+```
+
+Example: if a 3.5 m lane appears 49 pixels wide, use `14` pixels per meter.
+
+## Project Structure
+
+```text
+app.py                  Flask web server and API routes
+traffic_analyzer.py     OpenCV detection, optical flow, tracking, and alerts
+violation_model.py      Track feature extraction and model loading
+train_violation_model.py Model training script
+vehicle_detector.py     Optional custom detector loader
+train_vehicle_detector.py Custom detector training script
+tools/bdd100k_to_yolo.py BDD100K to YOLO converter
+tools/trajectory_to_violation_dataset.py Trajectory dataset converter for violation training
+data/                   Labelled training dataset
+models/                 Trained model output
+templates/index.html    Web interface
+static/styles.css       Interface styling
+static/app.js           Browser-side controls and live metrics
+uploads/                Uploaded videos, created automatically
+```
+
+## Notes For Report
+
+You can describe the system as a hybrid motion-based traffic analyzer:
+
+- Foreground extraction isolates moving road users.
+- Multi-object tracking maintains vehicle identities.
+- Sparse optical flow estimates local motion vectors.
+- Pixel-to-world calibration converts motion to approximate speed.
+- A trained Random Forest classifier identifies ambiguous illegal-driving patterns.
+- Speed-limit comparison identifies overspeeding.
+
+Limitations:
+
+- It estimates speed from image-plane motion, so perspective distortion affects accuracy.
+- Shadows and camera shake can create false detections.
+- Occlusion can break object tracks.
+- A production system should use camera calibration, lane geometry, and a trained vehicle detector.
