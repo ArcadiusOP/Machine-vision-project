@@ -1,0 +1,359 @@
+:root {
+  color-scheme: light;
+  --ink: #182530;
+  --muted: #5d6b78;
+  --line: #2e3a46;
+  --accent: #00a6a6;
+  --accent-dark: #007d7d;
+  --white: #ffffff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", Arial, Helvetica, sans-serif;
+  background: #151b20;
+  color: var(--ink);
+}
+
+.shell {
+  width: min(1440px, 100%);
+  min-height: 100vh;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: auto 1fr;
+}
+
+.control-panel {
+  position: relative;
+  overflow: hidden;
+  background:
+    linear-gradient(135deg, rgba(0, 166, 166, 0.18), transparent 34%),
+    linear-gradient(180deg, #111820 0%, #182128 100%);
+  border-bottom: 1px solid #2f3d48;
+  padding: 26px 30px 24px;
+}
+
+.control-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.045) 1px, transparent 1px);
+  background-size: 28px 28px;
+  mask-image: linear-gradient(90deg, rgba(0, 0, 0, 0.75), transparent 82%);
+}
+
+.control-panel > * {
+  position: relative;
+  z-index: 1;
+}
+
+.title-block {
+  margin-bottom: 22px;
+  display: grid;
+  grid-template-columns: minmax(320px, 620px) minmax(280px, 1fr);
+  gap: 28px;
+  align-items: center;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(196, 211, 224, 0.16);
+}
+
+.eyebrow {
+  width: fit-content;
+  margin: 0 0 10px;
+  padding: 6px 10px;
+  border: 1px solid rgba(95, 217, 217, 0.42);
+  border-radius: 6px;
+  background: rgba(0, 166, 166, 0.14);
+  color: #9be8e8;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+h1 {
+  margin: 0;
+  max-width: 640px;
+  font-size: 2.35rem;
+  line-height: 1.08;
+  color: #f3f8fb;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
+}
+
+.title-meta {
+  display: grid;
+  gap: 14px;
+  justify-items: end;
+}
+
+.lede {
+  margin: 0;
+  color: #b9c6d0;
+  line-height: 1.55;
+  font-size: 1rem;
+  max-width: 650px;
+  text-align: right;
+}
+
+.status-strip {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.status-strip span {
+  min-height: 30px;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid rgba(185, 198, 208, 0.18);
+  border-radius: 6px;
+  padding: 0 10px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #dce7ee;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: minmax(210px, 1.1fr) minmax(240px, 1.35fr) repeat(4, minmax(150px, 0.8fr)) minmax(190px, 0.9fr);
+  gap: 14px;
+  align-items: end;
+  padding: 14px;
+  border: 1px solid rgba(196, 211, 224, 0.14);
+  border-radius: 8px;
+  background: rgba(6, 12, 18, 0.38);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+legend,
+.field span {
+  display: block;
+  margin-bottom: 8px;
+  color: #d4e0e8;
+  font-weight: 700;
+  font-size: 0.86rem;
+}
+
+.choice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 30px;
+  cursor: pointer;
+  color: #c8d4dc;
+  font-size: 0.88rem;
+}
+
+.field input,
+.field select {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid #3a4a57;
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: #0f151b;
+  color: #f2f6f8;
+  font: inherit;
+}
+
+.field input:focus,
+.field select:focus {
+  outline: 2px solid rgba(0, 166, 166, 0.36);
+  border-color: var(--accent);
+}
+
+.hidden {
+  display: none;
+}
+
+.actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 0;
+}
+
+button {
+  border: 0;
+  border-radius: 8px;
+  min-height: 46px;
+  padding: 0 16px;
+  background: linear-gradient(180deg, #00b8b8, #008e8e);
+  color: var(--white);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+button:hover {
+  background: linear-gradient(180deg, #00c4c4, #008383);
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+button.secondary {
+  background: #28343f;
+}
+
+.analysis-panel {
+  padding: 24px 28px 28px;
+  display: grid;
+  gap: 18px;
+  align-content: start;
+  background: #151b20;
+}
+
+.video-stage {
+  position: relative;
+  width: 100%;
+  min-height: 420px;
+  aspect-ratio: 16 / 9;
+  background: #080d12;
+  border: 1px solid #344452;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 16px 42px rgba(0, 0, 0, 0.28);
+}
+
+.video-stage img {
+  display: none;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.video-stage.active img {
+  display: block;
+}
+
+.empty-state {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  gap: 8px;
+  color: #e6edf3;
+  text-align: center;
+}
+
+.empty-state strong {
+  font-size: 1.35rem;
+}
+
+.empty-state span {
+  color: #bac7d3;
+}
+
+.video-stage.active .empty-state {
+  display: none;
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(9, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.metrics-grid article,
+.alerts {
+  background: #1b232b;
+  border: 1px solid #2f3d48;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.metrics-grid span {
+  display: block;
+  color: #9caab5;
+  font-size: 0.9rem;
+}
+
+.metrics-grid strong {
+  display: block;
+  margin-top: 8px;
+  font-size: 1.45rem;
+  color: #eef5f8;
+}
+
+.alerts h2 {
+  margin: 0 0 10px;
+  font-size: 1.1rem;
+  color: #eef5f8;
+}
+
+.alerts ul {
+  margin: 0;
+  padding-left: 20px;
+  color: #a15c07;
+  line-height: 1.6;
+}
+
+.alerts li:first-child:last-child {
+  color: #9caab5;
+}
+
+@media (max-width: 980px) {
+  .title-block {
+    grid-template-columns: 1fr;
+    align-items: start;
+  }
+
+  .lede {
+    margin-top: 0;
+    text-align: left;
+  }
+
+  .title-meta,
+  .status-strip {
+    justify-items: start;
+    justify-content: flex-start;
+  }
+
+  .form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .metrics-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 560px) {
+  .control-panel,
+  .analysis-panel {
+    padding: 16px;
+  }
+
+  h1 {
+    font-size: 1.55rem;
+  }
+
+  .actions,
+  .form-grid,
+  .metrics-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .video-stage {
+    min-height: 240px;
+  }
+}
