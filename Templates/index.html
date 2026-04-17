@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Traffic Vision Analyzer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  </head>
+  <body>
+    <main class="shell">
+      <section class="control-panel">
+        <div class="title-block">
+          <div>
+            <p class="eyebrow">Real-Time Traffic Intelligence</p>
+            <h1>Vision-Based Speed Estimation & Traffic Analysis</h1>
+          </div>
+          <div class="title-meta">
+            <p class="lede">YOLOv8 vehicle detection, tracker-based IDs, homography speed estimation, and real-time traffic analytics from road video.</p>
+            <div class="status-strip">
+              <span>YOLOv8 Detection</span>
+              <span>ByteTrack IDs</span>
+              <span>Homography Speed</span>
+              <span>Live Alerts</span>
+            </div>
+          </div>
+        </div>
+        <form id="startForm" class="form-grid">
+          <fieldset class="source-options">
+            <legend>Traffic source</legend>
+            <label class="choice">
+              <input type="radio" name="source_type" value="upload" checked>
+              <span>Upload video file</span>
+            </label>
+            <label class="choice">
+              <input type="radio" name="source_type" value="live">
+              <span>Connect live traffic camera</span>
+            </label>
+          </fieldset>
+
+          <label class="field upload-field">
+            <span>Video file</span>
+            <input type="file" name="video" accept="video/*">
+          </label>
+
+          <label class="field live-field hidden">
+            <span>Camera URL or webcam index</span>
+            <input type="text" name="camera_url" placeholder="rtsp://... or 0">
+          </label>
+
+          <label class="field">
+            <span>Pixels per meter</span>
+            <input type="number" name="pixels_per_meter" value="14" min="1" step="0.5">
+          </label>
+
+          <label class="field">
+            <span>Speed limit (km/h)</span>
+            <input type="number" name="speed_limit_kmh" value="50" min="1" step="1">
+          </label>
+
+          <label class="field">
+            <span>Expected traffic direction</span>
+            <select name="expected_direction">
+              <option value="right">Left to right</option>
+              <option value="left">Right to left</option>
+              <option value="down">Top to bottom</option>
+              <option value="up">Bottom to top</option>
+            </select>
+          </label>
+
+          <label class="field">
+            <span>U-turn angle threshold</span>
+            <input type="number" name="uturn_angle_threshold" value="130" min="90" max="180" step="1">
+          </label>
+
+          <div class="actions">
+            <button type="submit" id="startBtn">Start analysis</button>
+            <button type="button" id="stopBtn" class="secondary" disabled>Stop</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="analysis-panel">
+        <div class="video-stage">
+          <div class="empty-state" id="emptyState">
+            <strong>Ready for traffic footage</strong>
+            <span>Choose a file or connect a stream to begin.</span>
+          </div>
+          <img id="videoFeed" alt="Annotated traffic analysis stream">
+        </div>
+
+        <div class="metrics-grid">
+          <article><span>Active vehicles</span><strong id="vehicles">0</strong></article>
+          <article><span>Total count</span><strong id="totalCount">0</strong></article>
+          <article><span>Average speed</span><strong><span id="avgSpeed">0.0</span> km/h</strong></article>
+          <article><span>Overspeeding</span><strong id="overspeeding">0</strong></article>
+          <article><span>Wrong-way</span><strong id="wrongWay">0</strong></article>
+          <article><span>U-turns</span><strong id="uturns">0</strong></article>
+          <article><span>Congestion</span><strong id="congestionLevel">Low</strong></article>
+          <article><span>Overall confidence</span><strong><span id="overallConfidence">0.0</span>%</strong></article>
+          <article><span>Alert confidence</span><strong><span id="alertConfidence">0.0</span>%</strong></article>
+        </div>
+
+        <div class="alerts">
+          <h2>Alerts</h2>
+          <ul id="alertsList">
+            <li>No alerts yet.</li>
+          </ul>
+        </div>
+      </section>
+    </main>
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+  </body>
+</html>
